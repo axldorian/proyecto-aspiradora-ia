@@ -1,46 +1,157 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+	import { onMount } from "svelte";
+	import Board from "./components/Board.svelte";
+	import Details from "./components/Details.svelte";
+
+	let matriz: number[][] = Array.apply(null, Array(12)).map(() =>
+		Array.apply(null, Array(12)).map(() => 0)
+	);
+
+	let basuras = 3;
+	let remaining = 0;
+
+	let isWorking = false;
+
+	const iniciarMatriz = () => {
+		matriz = Array.apply(null, Array(12)).map(() =>
+			Array.apply(null, Array(12)).map(() => 0)
+		);
+	};
+
+	const coordenada = () => {
+		const c: number = Math.floor(
+			Math.random() * (Math.floor(11) - Math.ceil(0) + 1) + Math.ceil(0)
+		);
+		return c;
+	};
+
+	const iniciarAspiradora = () => {
+		const x = coordenada();
+		const y = coordenada();
+
+		matriz[x][y] = 2;
+	};
+
+	const generarBasuras = (basuras: number) => {
+		for (let i = 0; i < basuras; i++) {
+			const x = coordenada();
+			const y = coordenada();
+
+			if (matriz[x][y] === 0 && matriz[x][y] != 2) {
+				matriz[x][y] = 1;
+			} else {
+				i--;
+			}
+		}
+	};
+
+	const reiniciarAspiradora = () => {
+		iniciarMatriz();
+		iniciarAspiradora();
+	};
+
+	onMount(() => reiniciarAspiradora());
 </script>
 
 <main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer"> 
-      <img src="/vite.svg" class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer"> 
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+	<section id="panel">
+		<h1>AGENTE ASPIRADORA</h1>
+		<div style="margin: 1em; text-align: center">
+			<p style="display: inline;">Basuras para Agregar:</p>
+			<input
+				type="number"
+				min="1"
+				max="143"
+				bind:value={basuras}
+				disabled={isWorking}
+			/>
+			<button
+				on:click={() => {
+					if (remaining + basuras > 143) return;
+					remaining += basuras;
+					generarBasuras(basuras);
+				}}
+				disabled={isWorking}
+			>
+				Agregar
+			</button>
+		</div>
 
-  <div class="card">
-    <Counter />
-  </div>
+		<div style="margin: 1em; text-align: center; margin-bottom: 60px">
+			<button
+				style="margin-right: 10px;"
+				on:click={() => {
+					isWorking = true;
+				}}>Iniciar agente</button
+			>
+			<button
+				on:click={() => {
+					isWorking = false;
+					remaining = 0;
+					reiniciarAspiradora();
+				}}>Reiniciar</button
+			>
+		</div>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
+		<Details />
+	</section>
 
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+	<Board {matriz} />
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
+	main {
+		display: flex;
+		width: 100vw;
+		height: 100vh;
+		gap: 120px;
+		padding: 26px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	h1 {
+		font-size: 30px;
+		margin-bottom: 40px;
+		font-family: "Pixeled", consolas;
+	}
+
+	p {
+		font-size: 20px;
+	}
+
+	input {
+		padding: 8px;
+		border: 1px solid #e1e1e1;
+		font-size: 16px;
+	}
+
+	button {
+		padding: 10px 14px;
+		border: none;
+		background-color: #c23334;
+		cursor: pointer;
+		color: #ffffff;
+		font-size: 16px;
+	}
+
+	button:hover:not(:disabled) {
+		background-color: #b41414;
+	}
+
+	button:active:not(:disabled) {
+		background-color: #c73c3c;
+	}
+
+	button:disabled {
+		cursor: not-allowed;
+	}
+
+	#panel {
+		flex-grow: 0;
+		background-color: rgba(172, 210, 235);
+		border-top: 45px solid rgba(172, 210, 235, 0.845);
+		border-bottom: 45px solid rgba(172, 210, 235, 0.845);
+		padding: 40px;
+	}
 </style>
