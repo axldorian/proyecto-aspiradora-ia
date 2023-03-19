@@ -9,8 +9,15 @@
 
 	let basuras = 3;
 	let remaining = 0;
+	let removed = 0;
+	let moves = 0;
 
 	let isWorking = false;
+	let cronometro = "00:00";
+	let inicioCronometro = new Date().getTime();
+
+	let xAspiradora = 0;
+	let yAspiradora = 0;
 
 	const iniciarMatriz = () => {
 		matriz = Array.apply(null, Array(12)).map(() =>
@@ -26,10 +33,10 @@
 	};
 
 	const iniciarAspiradora = () => {
-		const x = coordenada();
-		const y = coordenada();
+		xAspiradora = coordenada();
+		yAspiradora = coordenada();
 
-		matriz[x][y] = 2;
+		matriz[xAspiradora][yAspiradora] = 2;
 	};
 
 	const generarBasuras = (basuras: number) => {
@@ -43,6 +50,115 @@
 				i--;
 			}
 		}
+	};
+
+	const generaDireccion = (): string => {
+		let dir = "";
+		let condition = false;
+
+		do {
+			condition = false;
+			const c: number = Math.floor(
+				Math.random() * (Math.floor(4) - Math.ceil(1) + 1) +
+					Math.ceil(1)
+			);
+
+			switch (c) {
+				case 1:
+					if (xAspiradora > 0) {
+						dir = "U";
+						condition = true;
+					}
+					break;
+				case 2:
+					if (xAspiradora < 11) {
+						dir = "D";
+						condition = true;
+					}
+					break;
+				case 3:
+					if (yAspiradora > 0) {
+						dir = "L";
+						condition = true;
+					}
+					break;
+				case 4:
+					if (yAspiradora < 11) {
+						dir = "R";
+						condition = true;
+					}
+					break;
+			}
+		} while (!condition);
+
+		return dir;
+	};
+
+	const actualizarCronometro = () => {
+		const ahora = new Date().getTime();
+		const tiempoTranscurrido = ahora - inicioCronometro;
+		const segundosTranscurridos = Math.floor(tiempoTranscurrido / 1000);
+		const minutosTranscurridos = Math.floor(segundosTranscurridos / 60);
+		const segundosRestantes = segundosTranscurridos % 60;
+
+		cronometro = `${
+			minutosTranscurridos < 10
+				? `0${minutosTranscurridos}`
+				: minutosTranscurridos
+		}:${
+			segundosRestantes < 10 ? `0${segundosRestantes}` : segundosRestantes
+		}`;
+	};
+
+	const comenzarLimpieza = () => {
+		isWorking = true;
+		removed = 0;
+		moves = 0;
+		cronometro = "00:00";
+
+		inicioCronometro = new Date().getTime();
+		let idCrono = setInterval(actualizarCronometro, 1000);
+
+		let idIntervalo = setInterval(() => {
+			if (remaining <= 0) {
+				clearInterval(idCrono);
+				clearInterval(idIntervalo);
+				isWorking = false;
+				alert("LIMPIEZA FINALIZADAAA");
+			}
+
+			// Quitar aspiradora actual
+			matriz[xAspiradora][yAspiradora] = 0;
+			
+			let movimiento = generaDireccion();
+			switch (movimiento) {
+				case "U": // up
+					xAspiradora--;
+					break;
+
+				case "D": // down
+					xAspiradora++;
+					break;
+
+				case "L": // left
+					yAspiradora--;
+					break;
+
+				case "R": // right
+					yAspiradora++;
+					break;
+			}
+
+			// Actualizar basuras
+			if (matriz[xAspiradora][yAspiradora] === 1) {
+				remaining--;
+				removed++;
+			}
+
+			// Actualizar aspiradora
+			matriz[xAspiradora][yAspiradora] = 2;
+			moves++;
+		}, 150);
 	};
 
 	const reiniciarAspiradora = () => {
@@ -80,20 +196,22 @@
 		<div style="margin: 1em; text-align: center; margin-bottom: 60px">
 			<button
 				style="margin-right: 10px;"
-				on:click={() => {
-					isWorking = true;
-				}}>Iniciar agente</button
+				on:click={comenzarLimpieza}
+				disabled={remaining == 0 || isWorking}>Iniciar agente</button
 			>
 			<button
 				on:click={() => {
 					isWorking = false;
 					remaining = 0;
+					removed = 0;
+					moves = 0;
+					cronometro = "00:00";
 					reiniciarAspiradora();
 				}}>Reiniciar</button
 			>
 		</div>
 
-		<Details />
+		<Details cleaned={removed} movements={moves} crono={cronometro} />
 	</section>
 
 	<Board {matriz} />

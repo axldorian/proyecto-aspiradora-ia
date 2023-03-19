@@ -1,7 +1,7 @@
 <script lang="ts">
 	export let cleaned = 0;
 	export let movements = 0;
-	export let crono = 0;
+	export let crono = '00:00';
 </script>
 
 <div id="details">
